@@ -106,7 +106,8 @@ def run_install(model: str | None = None, quant: str | None = None) -> None:
     existing_paths = {m["model_path"] for m in models}
     if model_path not in existing_paths:
         models.append(entry)
-    save_config({**server_opts, "models": models})
+    new_config = {**config, **server_opts, "models": models} if config else {**server_opts, "models": models}
+    save_config(new_config)
 
     print(f"Model saved to: {model_path}")
     print("Run `aya-cli serve` to start the API.")
