@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from aya_cli.config import CONFIG_DIR, MODELS_DIR, get_models_list, load_config
+from aya_cli.config import CONFIG_DIR, get_models_list, load_config
 
 def check_models() -> None:
     if not CONFIG_DIR.exists():

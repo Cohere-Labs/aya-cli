@@ -17,14 +17,13 @@ from aya_cli.config import (
 )
 from aya_cli.check_specs import (
     AVAILABLE_QUANTS,
+    DEFAULT_QUANT,
     check_specs,
     check_hf_auth,
     get_mac_specs,
     prompt_quant,
     recommend_quant,
 )
-
-DEFAULT_QUANT = "q4_k_m"
 
 def _prompt_model() -> str:
     print("Available Tiny Aya models:")
@@ -34,7 +33,13 @@ def _prompt_model() -> str:
     if not sys.stdin.isatty():
         print("No TTY; using default model.", file=sys.stderr)
         return DEFAULT_MODEL
-    raw = input(f"Choice [1-{len(MODEL_SLUGS)} or slug, Enter for default]: ").strip().lower()
+    try:
+        raw = input(
+            f"Choice [1-{len(MODEL_SLUGS)} or slug, Enter for default]: "
+        ).strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        print("\nNo input received; using default model.", file=sys.stderr)
+        return DEFAULT_MODEL
     if not raw:
         return DEFAULT_MODEL
     if raw in MODEL_SLUGS:
@@ -81,28 +86,38 @@ def run_install(model: str | None = None, quant: str | None = None) -> None:
     else:
         specs = get_mac_specs()
         if specs:
-            print(f"Mac: {specs.chip} | {specs.ram_gb:.1f} GB RAM")
+            print(f"macOS: {specs.chip} | {specs.ram_gb:.1f} GB RAM")
             print()
             recommended, reason = recommend_quant(specs)
             chosen = prompt_quant(recommended, reason)
         else:
-            print(f"Could not detect Mac specs. Using default: {DEFAULT_QUANT}")
+            print(f"Could not detect macOS specs. Using default: {DEFAULT_QUANT}")
             chosen = DEFAULT_QUANT
 
     filename = f"tiny-aya-{chosen_model}-{chosen}.gguf"
-    path = hf_hub_download(
-        repo_id=repo_id,
-        filename=filename,
-        local_dir=str(MODELS_DIR),
-    )
+    try:
+        path = hf_hub_download(
+            repo_id=repo_id,
+            filename=filename,
+            local_dir=str(MODELS_DIR),
+        )
+    except Exception as e:
+        print(
+            f"Download failed: {e}. Check your network, Hugging Face login (hf auth login), "
+            "and that the model file exists in the repo.",
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from e
     model_path = str(Path(path).resolve())
     entry = {"model_path": model_path, "quant": chosen, "repo_id": repo_id}
 
     config = load_config()
     models = get_models_list(config)
-    server_opts = get_server_opts(config) if config else {"port": DEFAULT_PORT, "n_ctx": DEFAULT_N_CTX, "n_gpu_layers": DEFAULT_N_GPU_LAYERS}
-    if not models:
-        server_opts = {"port": DEFAULT_PORT, "n_ctx": DEFAULT_N_CTX, "n_gpu_layers": DEFAULT_N_GPU_LAYERS}
+    server_opts = (
+        get_server_opts(config)
+        if config
+        else {"port": DEFAULT_PORT, "n_ctx": DEFAULT_N_CTX, "n_gpu_layers": DEFAULT_N_GPU_LAYERS}
+    )
     existing_paths = {m["model_path"] for m in models}
     if model_path not in existing_paths:
         models.append(entry)

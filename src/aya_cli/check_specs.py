@@ -39,7 +39,9 @@ def get_mac_specs() -> MacSpecs | None:
             pass
     ram_gb = (ram_bytes / (1024**3)) if ram_bytes else 0.0
     arch = platform.machine() or "unknown"
-    chip = _sysctl("machdep.cpu.brand_string") or "Apple Silicon" if arch == "arm64" else "Intel"
+    chip = _sysctl("machdep.cpu.brand_string") or (
+        "Apple Silicon" if arch == "arm64" else "Intel"
+    )
     cores_str = _sysctl("hw.ncpu")
     cores = int(cores_str) if cores_str and cores_str.isdigit() else 0
 
@@ -92,7 +94,9 @@ def print_specs_and_recommendation() -> None:
         raise SystemExit(1)
 
     quant, reason = recommend_quant(specs)
-    print(f"macOS: {specs.chip} | {specs.ram_gb:.1f} GB RAM | {specs.arch} | {specs.cores} cores")
+    print(
+        f"macOS: {specs.chip} | {specs.ram_gb:.1f} GB RAM | {specs.arch} | {specs.cores} cores"
+    )
     print()
     print(f"Recommended quantization: {quant}")
     print(f"Reason: {reason}")
@@ -116,7 +120,7 @@ def check_hf_auth() -> None:
 def prompt_quant(specs_quant: str, reason: str) -> str:
     print("Default quantization: q4_k_m")
     print()
-    print(f"Based on your Mac we recommend: {specs_quant}")
+    print(f"Based on your macOS we recommend: {specs_quant}")
     print(f"Reason: {reason}")
     print()
     print("Options:")
@@ -126,7 +130,14 @@ def prompt_quant(specs_quant: str, reason: str) -> str:
     if not sys.stdin.isatty():
         print("No TTY; using recommended.", file=sys.stderr)
         return specs_quant
-    raw = input("Choice [Y/n or quant]: ").strip().lower()
+    try:
+        raw = input("Choice [Y/n or quant]: ").strip().lower()
+    except EOFError:
+        print("No input received; using recommended.", file=sys.stderr)
+        return specs_quant
+    except KeyboardInterrupt:
+        print("\nInterrupted; using recommended.", file=sys.stderr)
+        return specs_quant
     if not raw or raw == "y" or raw == "yes":
         return specs_quant
     if raw == "n" or raw == "no":
