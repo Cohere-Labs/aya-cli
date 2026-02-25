@@ -10,12 +10,12 @@ def _install_llama_via_brew() -> str | None:
     if not shutil.which("brew"):
         return None
     print("llama-server not found. Installing via Homebrew (brew install llama.cpp)...", file=sys.stderr)
-    rc = subprocess.run(
+    result = subprocess.run(
         ["brew", "install", "llama.cpp"],
         stdout=sys.stdout,
         stderr=sys.stderr,
     )
-    if rc.returncode != 0:
+    if result.returncode != 0:
         return None
     out = subprocess.run(
         ["brew", "--prefix", "llama.cpp"],
