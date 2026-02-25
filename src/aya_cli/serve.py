@@ -94,6 +94,6 @@ def run_serve() -> None:
         "-ngl",
         str(n_gpu_layers),
     ]
-    print(f"OpenAI-compatible API: http://localhost:{port}/v1")
+    print(f"OpenAI-compatible API: http://0.0.0.0:{port}/v1 (accessible on your local network)")
     print("Press Ctrl+C to stop.")
     subprocess.run(cmd)
