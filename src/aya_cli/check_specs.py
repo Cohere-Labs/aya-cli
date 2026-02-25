@@ -52,22 +52,22 @@ def recommend_quant(specs: MacSpecs) -> tuple[str, str]:
     if ram <= 0:
         return "q4_k_m", "Could not detect RAM; defaulting to q4_k_m (good balance of quality and size)."
 
-    if ram < 10:
+    if ram <= 10:
         return (
             "q4_0",
             f"Your Mac has {ram:.0f} GB unified memory. q4_0 uses ~2 GB so you have room for context and other apps.",
         )
-    if ram < 16:
+    if ram <= 16:
         return (
             "q4_k_m",
             f"Your Mac has {ram:.0f} GB unified memory. q4_k_m gives the best quality/size balance and leaves headroom.",
         )
-    if ram < 24:
+    if ram <= 24:
         return (
             "q8_0",
             f"Your Mac has {ram:.0f} GB RAM. q8_0 is the safe default; you can override with bf16 for higher quality.",
         )
-    if ram < 32:
+    if ram <= 32:
         return (
             "bf16",
             f"Your Mac has {ram:.0f} GB RAM. bf16 fits comfortably and gives near-full quality.",
