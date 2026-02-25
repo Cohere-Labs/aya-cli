@@ -88,11 +88,11 @@ def print_specs_and_recommendation() -> None:
     check_specs()
     specs = get_mac_specs()
     if not specs:
-        print("Could not detect Mac specs (run on macOS).", file=sys.stderr)
+        print("Could not detect macOS specs (run on macOS).", file=sys.stderr)
         raise SystemExit(1)
 
     quant, reason = recommend_quant(specs)
-    print(f"Mac: {specs.chip} | {specs.ram_gb:.1f} GB RAM | {specs.arch} | {specs.cores} cores")
+    print(f"macOS: {specs.chip} | {specs.ram_gb:.1f} GB RAM | {specs.arch} | {specs.cores} cores")
     print()
     print(f"Recommended quantization: {quant}")
     print(f"Reason: {reason}")
