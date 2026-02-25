@@ -50,4 +50,10 @@ def get_server_opts(config: dict) -> dict:
 
 def save_config(data: dict) -> None:
     ensure_dirs()
-    CONFIG_FILE.write_text(json.dumps(data, indent=2))
+    try:
+        CONFIG_FILE.write_text(json.dumps(data, indent=2))
+    except OSError as e:
+        raise RuntimeError(
+            f"Unable to save configuration to '{CONFIG_FILE}': {e}. "
+            "Please ensure the configuration directory exists, you have write permissions, and sufficient disk space."
+        ) from e
