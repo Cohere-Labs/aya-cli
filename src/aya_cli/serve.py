@@ -86,7 +86,7 @@ def run_serve() -> None:
         "-m",
         model_path,
         "--host",
-        "0.0.0.0",
+        "127.0.0.1",
         "--port",
         str(port),
         "--ctx-size",
