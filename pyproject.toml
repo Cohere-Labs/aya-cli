@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aya-cli"
 version = "0.1.0"
-description = "Mac-only CLI to install Tiny Aya GGUF and run OpenAI-compatible server"
+description = "Cross-platform CLI to install Tiny Aya GGUF and run an OpenAI-compatible server"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
