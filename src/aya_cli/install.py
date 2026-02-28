@@ -20,7 +20,7 @@ from aya_cli.check_specs import (
     DEFAULT_QUANT,
     check_specs,
     check_hf_auth,
-    get_mac_specs,
+    get_system_specs,
     prompt_quant,
     recommend_quant,
 )
@@ -84,14 +84,14 @@ def run_install(model: str | None = None, quant: str | None = None) -> None:
         chosen = quant
         print(f"Using quantization: {chosen} (from --quant)")
     else:
-        specs = get_mac_specs()
+        specs = get_system_specs()
         if specs:
-            print(f"macOS: {specs.chip} | {specs.ram_gb:.1f} GB RAM")
+            print(f"{specs.platform_name}: {specs.chip} | {specs.ram_gb:.1f} GB RAM")
             print()
             recommended, reason = recommend_quant(specs)
             chosen = prompt_quant(recommended, reason)
         else:
-            print(f"Could not detect macOS specs. Using default: {DEFAULT_QUANT}")
+            print(f"Could not detect system specs. Using default: {DEFAULT_QUANT}")
             chosen = DEFAULT_QUANT
 
     filename = f"tiny-aya-{chosen_model}-{chosen}.gguf"

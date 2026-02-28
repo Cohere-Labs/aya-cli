@@ -1,7 +1,19 @@
 import json
+import os
+import sys
 from pathlib import Path
 
-CONFIG_DIR = Path("~/.config/aya-assist").expanduser()
+
+def _get_config_dir() -> Path:
+    """Return platform-appropriate config directory for aya-assist."""
+    if sys.platform == "win32":
+        base = Path(os.environ.get("LOCALAPPDATA", os.path.expanduser("~/AppData/Local")))
+    else:
+        base = Path(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")))
+    return base / "aya-assist"
+
+
+CONFIG_DIR = _get_config_dir()
 MODELS_DIR = CONFIG_DIR / "model"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 DEFAULT_PORT = 8000
