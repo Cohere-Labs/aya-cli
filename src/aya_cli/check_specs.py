@@ -57,7 +57,11 @@ def get_mac_specs() -> SystemSpecs | None:
 # ---------------------------------------------------------------------------
 
 def _wmic(alias: str, field: str) -> str | None:
-    """Query a WMI value via wmic (available on Windows 10/11)."""
+    """Query a WMI value via `wmic` when available.
+
+    Note: `wmic` is deprecated on recent Windows versions and may be missing.
+    This helper returns None if `wmic` is unavailable or the query fails.
+    """
     try:
         out = subprocess.run(
             ["wmic", alias, "get", field, "/value"],
