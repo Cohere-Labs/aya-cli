@@ -5,8 +5,12 @@ from pathlib import Path
 from aya_cli.config import get_models_list, get_server_opts, load_config
 from aya_cli.check_specs import check_specs
 
+# ---------------------------------------------------------------------------
+#  Auto-install helpers (per-platform)
+# ---------------------------------------------------------------------------
 
 def _install_llama_via_brew() -> str | None:
+    """Attempt to install llama.cpp via Homebrew (macOS)."""
     if not shutil.which("brew"):
         return None
     print("llama-server not found. Installing via Homebrew (brew install llama.cpp)...", file=sys.stderr)
@@ -39,7 +43,45 @@ def _install_llama_via_brew() -> str | None:
     return str(path) if path.exists() else shutil.which("llama-server")
 
 
+def _install_llama_via_winget() -> str | None:
+    """Attempt to install llama.cpp via winget (Windows 10/11)."""
+    if not shutil.which("winget"):
+        return None
+    print("llama-server not found. Installing via winget (winget install ggml-org.llama.cpp)...", file=sys.stderr)
+    try:
+        result = subprocess.run(
+            ["winget", "install", "ggml-org.llama.cpp",
+             "--accept-source-agreements", "--accept-package-agreements"],
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            timeout=300,
+        )
+    except subprocess.TimeoutExpired:
+        print(
+            "winget install timed out after 300 seconds. "
+            "Please try running the installation manually.",
+            file=sys.stderr,
+        )
+        return None
+    if result.returncode != 0:
+        return None
+    # winget installs may require a new shell to pick up PATH changes
+    path = shutil.which("llama-server") or shutil.which("llama-server.exe")
+    if path:
+        return path
+    print(
+        "llama-server was installed but not found on PATH. "
+        "Please restart your terminal and try again.",
+        file=sys.stderr,
+    )
+    return None
+
+# ---------------------------------------------------------------------------
+#  Resolve llama-server binary
+# ---------------------------------------------------------------------------
+
 def _resolve_llama_server() -> str | None:
+    """Find or auto-install the llama-server binary."""
     path = shutil.which("llama-server")
     if path:
         return path
@@ -47,7 +89,28 @@ def _resolve_llama_server() -> str | None:
         path = _install_llama_via_brew()
         if path:
             return path
+    elif sys.platform == "win32":
+        path = _install_llama_via_winget()
+        if path:
+            return path
     return None
+
+
+def _llama_not_found_message() -> str:
+    """Return a platform-appropriate error message when llama-server is missing."""
+    lines = ["llama-server not found."]
+    if sys.platform == "darwin":
+        lines.append("  Install with: brew install llama.cpp")
+    elif sys.platform == "win32":
+        lines.append("  Install with: winget install ggml-org.llama.cpp")
+    elif sys.platform == "linux":
+        lines.append("  Install from your package manager or build from source.")
+    lines.append("  Or build from source: https://github.com/ggml-org/llama.cpp")
+    return "\n".join(lines)
+
+# ---------------------------------------------------------------------------
+#  Main serve command
+# ---------------------------------------------------------------------------
 
 def run_serve() -> None:
     check_specs()
@@ -94,11 +157,7 @@ def run_serve() -> None:
 
     llama_server = _resolve_llama_server()
     if not llama_server:
-        print(
-            "llama-server not found. Install with: brew install llama.cpp\n"
-            "Or build from source: https://github.com/ggml-org/llama.cpp",
-            file=sys.stderr,
-        )
+        print(_llama_not_found_message(), file=sys.stderr)
         raise SystemExit(1)
 
     cmd = [
